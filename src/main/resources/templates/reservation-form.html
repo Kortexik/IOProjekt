@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Rezerwacja pokoju</title>
+    <style>
+        body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+form {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+input[type="text"],
+input[type="tel"],
+input[type="email"],
+input[type="date"],
+input[type="number"],
+select,
+textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+.error-message {
+    color: red;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 20px;
+}
+
+span {
+    display: block;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+    </style>
+    <script>
+        function updateRoomPrice() {
+            const roomType = document.getElementById("roomType").value;
+            const guestCount = document.getElementById("guestsCount").value;
+
+            if (roomType && guestCount) {
+                fetch(`/reservations/room-price?roomType=${roomType}&guestCount=${guestCount}`)
+                    .then(response => response.text())
+                    .then(price => {
+                        document.getElementById("roomPrice").innerText = price !== "N/A" ? `${price} PLN/noc` : "Brak dostępnych pokoi";
+                    })
+                    .catch(error => {
+                        console.error('Error fetching room price:', error);
+                        document.getElementById("roomPrice").innerText = "Błąd podczas pobierania ceny";
+                    });
+            }
+        }
+    </script>
+</head>
+<body>
+
+<h1>Rezerwacja pokoju</h1>
+
+<form th:action="@{/reservations/create}" th:object="${reservation}" method="post">
+    <label for="firstName">Imię:</label>
+    <input type="text" id="firstName" th:field="*{client.firstName}" required />
+
+    <label for="lastName">Nazwisko:</label>
+    <input type="text" id="lastName" th:field="*{client.lastName}" required />
+
+    <label for="phoneNumber">Numer telefonu:</label>
+    <input type="tel" id="phoneNumber" th:field="*{client.phoneNumber}" pattern="^\+?[1-9]\d{1,14}$" required />
+
+    <label for="email">Adres e-mail:</label>
+    <input type="email" id="email" th:field="*{client.email}" required />
+
+    <label for="checkInDate">Data przyjazdu:</label>
+    <input type="date" id="checkInDate" th:field="*{checkInDate}" required />
+
+    <label for="checkOutDate">Data wyjazdu:</label>
+    <input type="date" id="checkOutDate" th:field="*{checkOutDate}" required />
+
+    <label for="guestsCount">Liczba gości:</label>
+    <input type="number" id="guestsCount" th:field="*{guestsCount}" min="1" required oninput="updateRoomPrice()" />
+
+    <label for="roomType">Typ pokoju:</label>
+    <select id="roomType" name="roomType" th:field="*{roomType}" required onchange="updateRoomPrice()">
+        <option value="Apartment">Apartment</option>
+        <option value="Studio">Studio</option>
+        <option value="Suite">Suite</option>
+        <option value="Standard Room">Standard Room</option>
+    </select>
+
+    <span id="roomPrice"></span>
+
+
+    <label for="specialRequests">Specjalne życzenia:</label>
+    <textarea id="specialRequests" th:field="*{specialRequests}"></textarea>
+
+    <button type="submit">Potwierdź rezerwację</button>
+</form>
+
+<div th:if="${error}" class="error-message">
+    <p th:text="${error}"></p>
+</div>
+
+</body>
+</html>

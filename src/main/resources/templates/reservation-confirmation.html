@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reservation Confirmation</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .confirmation-container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #4CAF50;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        p {
+            color: #555;
+            font-size: 16px;
+            line-height: 1.6;
+            margin: 10px 0;
+        }
+
+        span {
+            font-weight: bold;
+        }
+
+        .footer-note {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+
+<div class="confirmation-container">
+    <h1>Reservation Confirmation</h1>
+    <p>Thank you for your reservation!</p>
+    <p>Reservation ID: <span th:text="${reservation.id}"></span></p>
+    <p>Check-in Date: <span th:text="${reservation.checkInDate}"></span></p>
+    <p>Check-out Date: <span th:text="${reservation.checkOutDate}"></span></p>
+    <p>Room Type: <span th:text="${reservation.room.roomType}"></span></p>
+    <p>Price Per Night: <span th:text="${reservation.room.pricePerNight} + ' PLN'"></span></p>
+
+    <div class="footer-note">We look forward to hosting you!</div>
+</div>
+
+</body>
+</html>
