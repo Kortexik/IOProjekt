@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dodaj pokój</title>
+    <style>
+        form {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        label, select, input, button {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        select, input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Dodaj nowy pokój</h1>
+
+<form th:action="@{/rooms/create}" th:object="${room}" method="post">
+    <label for="roomType">Typ pokoju:</label>
+    <select id="roomType" th:field="*{roomType}">
+        <option value="Apartment">Apartment</option>
+        <option value="Suite">Suite</option>
+        <option value="Standard Room">Standard Room</option>
+        <option value="Studio">Studio</option>
+    </select>
+
+    <label for="capacity">Pojemność:</label>
+    <input type="number" id="capacity" th:field="*{capacity}" required min="1" />
+
+    <label for="pricePerNight">Cena za noc (PLN):</label>
+    <input type="number" id="pricePerNight" th:field="*{pricePerNight}" required step="0.01" />
+
+    <!-- Hidden field to set status to "Available" -->
+    <input type="hidden" th:field="*{status}" value="Available" />
+
+    <button type="submit">Dodaj pokój</button>
+</form>
+
+</body>
+</html>

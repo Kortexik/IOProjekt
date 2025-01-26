@@ -2,11 +2,13 @@ package com.example.IO.Services;
 
 import com.example.IO.Models.Reservation;
 import com.example.IO.Models.Room;
+import com.example.IO.Models.Client;
 import com.example.IO.Repositories.ReservationRepository;
-import com.example.IO.Repositories.RoomRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -16,14 +18,44 @@ public class ReservationService {
     private ReservationRepository reservationRepository;
 
     @Autowired
-    private RoomRepository roomRepository;
+    private RoomService roomService;
 
-    public Reservation createReservation(Reservation reservation) {
-        Optional<Room> room = roomRepository.findById(reservation.getRoom().getId());
-        if (room.isPresent() && reservation.getGuestsCount() <= room.get().getCapacity()) {
-            return reservationRepository.save(reservation);
-        } else {
-            throw new IllegalArgumentException("Room is not available or exceeds capacity");
-        }
+    @Autowired
+    private ClientService clientService;
+
+    public Reservation createAndAssignReservation(Reservation reservation) {
+        Room availableRoom = roomService.findAvailableRoom(
+                        reservation.getRoomType(), reservation.getGuestsCount())
+                .orElseThrow(() -> new IllegalArgumentException("No available rooms match the criteria."));
+
+        reservation.setRoom(availableRoom);
+        reservation.setStatus("Pending");
+
+        Client savedClient = clientService.saveClient(reservation.getClient());
+        reservation.setClient(savedClient);
+
+        Reservation savedReservation = reservationRepository.save(reservation);
+
+        roomService.updateRoomStatus(availableRoom.getId(), "Occupied");
+
+        return savedReservation;
+    }
+
+    public List<Reservation> findAll() {
+        return reservationRepository.findAll();
+    }
+
+    public Optional<Reservation> findById(Long id) {
+        return reservationRepository.findById(id);
+    }
+
+    public void deleteReservation(Long id) {
+        reservationRepository.deleteById(id);
+    }
+
+    public String getRoomPrice(String roomType, int guestCount) {
+        return roomService.findCheapestRoomPrice(roomType, guestCount)
+                .map(BigDecimal::toString)
+                .orElse("N/A");
     }
 }

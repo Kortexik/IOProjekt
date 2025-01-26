@@ -1,25 +1,15 @@
 package com.example.IO.Controllers;
 
 import com.example.IO.Models.Reservation;
-import com.example.IO.Models.Room;
-import com.example.IO.Models.Client;
 import com.example.IO.Services.ReservationService;
 import com.example.IO.Services.ClientService;
 import com.example.IO.Services.RoomService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-
-import java.util.Comparator;
-import java.util.Optional;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
-@RequestMapping("/reservations")
 public class ReservationController {
 
     @Autowired
@@ -31,40 +21,18 @@ public class ReservationController {
     @Autowired
     private RoomService roomService;
 
-    @GetMapping("/new")
+    @GetMapping("/")
     public String showReservationForm(Model model) {
         model.addAttribute("reservation", new Reservation());
+        model.addAttribute("clients", clientService.findAll());
+        model.addAttribute("rooms", roomService.findAll());
         return "reservation-form";
     }
 
     @PostMapping("/create")
-    public String createReservation(Reservation reservation, Model model) {
-        Room availableRoom = roomService.findAll().stream()
-                .filter(room -> "Available".equals(room.getStatus())
-                        && room.getCapacity() >= reservation.getGuestsCount()
-                        && room.getRoomType().equals(reservation.getRoomType()))
-                .min(Comparator.comparing(Room::getPricePerNight))
-                .orElse(null);
-
-        if (availableRoom == null) {
-            model.addAttribute("error", "Brak dostępnych pokoi spełniających wymagania.");
-            return "reservation-form";
-        }
-
-        reservation.setRoom(availableRoom);
-        reservation.setStatus("Pending");
-
+    public String createReservation(@ModelAttribute Reservation reservation, Model model) {
         try {
-            Client client = reservation.getClient();
-            Client savedClient = clientService.saveClient(client);
-
-            reservation.setClient(savedClient);
-            Reservation savedReservation = reservationService.createReservation(reservation);
-
-            availableRoom.setStatus("Occupied");
-            roomService.saveRoom(availableRoom);
-
-            model.addAttribute("reservation", savedReservation);
+            model.addAttribute("reservation", reservationService.createAndAssignReservation(reservation));
             return "reservation-confirmation";
         } catch (IllegalArgumentException e) {
             model.addAttribute("error", e.getMessage());
@@ -75,12 +43,18 @@ public class ReservationController {
     @GetMapping("/room-price")
     @ResponseBody
     public String getRoomPrice(@RequestParam String roomType, @RequestParam int guestCount) {
-        Optional<Room> availableRoom = roomService.findAll().stream()
-                .filter(room -> "Available".equals(room.getStatus())
-                        && room.getCapacity() >= guestCount
-                        && room.getRoomType().equals(roomType))
-                .min(Comparator.comparing(Room::getPricePerNight));
+        return reservationService.getRoomPrice(roomType, guestCount);
+    }
 
-        return availableRoom.map(room -> room.getPricePerNight().toString()).orElse("N/A");
+    @GetMapping("/list")
+    public String viewAllReservations(Model model) {
+        model.addAttribute("reservations", reservationService.findAll());
+        return "reservations";
+    }
+
+    @GetMapping("/delete")
+    public String deleteReservation(@RequestParam Long id) {
+        reservationService.deleteReservation(id);
+        return "redirect:/reservations/list";
     }
 }
